@@ -5,10 +5,13 @@ import com.mycompany.myapp.security.jwt.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -27,6 +30,8 @@ public class SecurityConfiguration {
 
     private final TokenProvider tokenProvider;
 
+    private final CustomAuthenticationProvider customAuthenticationProvider;
+    private final UserDetailsService userDetailsService;
     private final CorsFilter corsFilter;
     private final SecurityProblemSupport problemSupport;
 
@@ -34,10 +39,14 @@ public class SecurityConfiguration {
         TokenProvider tokenProvider,
         CorsFilter corsFilter,
         JHipsterProperties jHipsterProperties,
+        CustomAuthenticationProvider customAuthenticationProvider,
+        UserDetailsService userDetailsService,
         SecurityProblemSupport problemSupport
     ) {
         this.tokenProvider = tokenProvider;
         this.corsFilter = corsFilter;
+        this.customAuthenticationProvider = customAuthenticationProvider;
+        this.userDetailsService = userDetailsService;
         this.problemSupport = problemSupport;
         this.jHipsterProperties = jHipsterProperties;
     }
@@ -45,6 +54,14 @@ public class SecurityConfiguration {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
+        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder.authenticationProvider(customAuthenticationProvider);
+        authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
+        return authenticationManagerBuilder.build();
     }
 
     @Bean

@@ -1,9 +1,12 @@
 package com.mycompany.myapp.web.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mycompany.myapp.security.CustomAuthenticationToken;
 import com.mycompany.myapp.security.jwt.JWTFilter;
 import com.mycompany.myapp.security.jwt.TokenProvider;
 import com.mycompany.myapp.web.rest.vm.LoginVM;
+import java.util.HashMap;
+import java.util.Map;
 import javax.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,11 +34,15 @@ public class UserJWTController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-            loginVM.getUsername(),
-            loginVM.getPassword()
-        );
+    public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM, @RequestHeader("Source") String someSource) {
+        UsernamePasswordAuthenticationToken authenticationToken;
+        if (someSource.equals("some source")) {
+            Map<String, String> details = new HashMap<>();
+            details.put("someSource", someSource);
+            authenticationToken = new CustomAuthenticationToken(loginVM.getUsername(), loginVM.getPassword(), details);
+        } else {
+            authenticationToken = new UsernamePasswordAuthenticationToken(loginVM.getUsername(), loginVM.getPassword());
+        }
 
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
