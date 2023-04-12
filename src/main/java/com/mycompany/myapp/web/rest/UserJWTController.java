@@ -34,7 +34,10 @@ public class UserJWTController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM, @RequestHeader("Source") String someSource) {
+    public ResponseEntity<JWTToken> authorize(
+        @Valid @RequestBody LoginVM loginVM,
+        @RequestHeader(value = "Source", required = false) String someSource
+    ) {
         UsernamePasswordAuthenticationToken authenticationToken;
         if (someSource.equals("some source")) {
             Map<String, String> details = new HashMap<>();
