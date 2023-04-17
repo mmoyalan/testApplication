@@ -22,7 +22,7 @@ import tech.jhipster.config.JHipsterProperties;
 
 class JWTFilterTest {
 
-    private TokenProvider tokenProvider;
+    private CustomTokenProvider tokenProvider;
 
     private JWTFilter jwtFilter;
 
@@ -34,7 +34,7 @@ class JWTFilterTest {
 
         SecurityMetersService securityMetersService = new SecurityMetersService(new SimpleMeterRegistry());
 
-        tokenProvider = new TokenProvider(jHipsterProperties, securityMetersService);
+        tokenProvider = new CustomTokenProvider(jHipsterProperties, securityMetersService);
         ReflectionTestUtils.setField(tokenProvider, "key", Keys.hmacShaKeyFor(Decoders.BASE64.decode(base64Secret)));
 
         ReflectionTestUtils.setField(tokenProvider, "tokenValidityInMilliseconds", 60000);

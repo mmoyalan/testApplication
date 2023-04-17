@@ -4,10 +4,20 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 
 public class CustomAuthenticationToken extends UsernamePasswordAuthenticationToken {
 
-    private Object someValue;
+    private Object details;
 
-    public CustomAuthenticationToken(Object principal, Object credentials, Object someValue) {
+    public CustomAuthenticationToken(Object principal, Object credentials, Object details) {
         super(principal, credentials);
-        this.someValue = someValue;
+        this.details = details;
+    }
+
+    @Override
+    public Object getDetails() {
+        return details;
+    }
+
+    @Override
+    public void setDetails(Object details) {
+        this.details = details;
     }
 }

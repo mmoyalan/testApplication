@@ -1,7 +1,9 @@
 package com.mycompany.myapp.config;
 
-import com.mycompany.myapp.security.*;
-import com.mycompany.myapp.security.jwt.*;
+import com.mycompany.myapp.security.AuthoritiesConstants;
+import com.mycompany.myapp.security.CustomAuthenticationProvider;
+import com.mycompany.myapp.security.jwt.CustomTokenProvider;
+import com.mycompany.myapp.security.jwt.JWTConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
@@ -28,24 +30,21 @@ public class SecurityConfiguration {
 
     private final JHipsterProperties jHipsterProperties;
 
-    private final TokenProvider tokenProvider;
+    private final CustomTokenProvider tokenProvider;
 
-    private final CustomAuthenticationProvider customAuthenticationProvider;
     private final UserDetailsService userDetailsService;
     private final CorsFilter corsFilter;
     private final SecurityProblemSupport problemSupport;
 
     public SecurityConfiguration(
-        TokenProvider tokenProvider,
+        CustomTokenProvider tokenProvider,
         CorsFilter corsFilter,
         JHipsterProperties jHipsterProperties,
-        CustomAuthenticationProvider customAuthenticationProvider,
         UserDetailsService userDetailsService,
         SecurityProblemSupport problemSupport
     ) {
         this.tokenProvider = tokenProvider;
         this.corsFilter = corsFilter;
-        this.customAuthenticationProvider = customAuthenticationProvider;
         this.userDetailsService = userDetailsService;
         this.problemSupport = problemSupport;
         this.jHipsterProperties = jHipsterProperties;
@@ -59,7 +58,7 @@ public class SecurityConfiguration {
     @Bean
     public AuthenticationManager authManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.authenticationProvider(customAuthenticationProvider);
+        authenticationManagerBuilder.authenticationProvider(new CustomAuthenticationProvider());
         authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
         return authenticationManagerBuilder.build();
     }
@@ -68,50 +67,50 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // @formatter:off
         http
-            .csrf()
-            .ignoringAntMatchers("/h2-console/**")
-            .disable()
-            .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
-            .exceptionHandling()
-                .authenticationEntryPoint(problemSupport)
-                .accessDeniedHandler(problemSupport)
-        .and()
-            .headers()
-                .contentSecurityPolicy(jHipsterProperties.getSecurity().getContentSecurityPolicy())
-            .and()
-                .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-            .and()
-                .permissionsPolicy().policy("camera=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), sync-xhr=()")
-            .and()
-                .frameOptions().sameOrigin()
-        .and()
-            .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        .and()
-            .authorizeRequests()
-            .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .antMatchers("/app/**/*.{js,html}").permitAll()
-            .antMatchers("/i18n/**").permitAll()
-            .antMatchers("/content/**").permitAll()
-            .antMatchers("/swagger-ui/**").permitAll()
-            .antMatchers("/test/**").permitAll()
-            .antMatchers("/h2-console/**").permitAll()
-            .antMatchers("/api/authenticate").permitAll()
-            .antMatchers("/api/register").permitAll()
-            .antMatchers("/api/activate").permitAll()
-            .antMatchers("/api/account/reset-password/init").permitAll()
-            .antMatchers("/api/account/reset-password/finish").permitAll()
-            .antMatchers("/api/admin/**").hasAuthority(AuthoritiesConstants.ADMIN)
-            .antMatchers("/api/**").authenticated()
-            .antMatchers("/management/health").permitAll()
-            .antMatchers("/management/health/**").permitAll()
-            .antMatchers("/management/info").permitAll()
-            .antMatchers("/management/prometheus").permitAll()
-            .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
-        .and()
-            .httpBasic()
-        .and()
-            .apply(securityConfigurerAdapter());
+          .csrf()
+          .ignoringAntMatchers("/h2-console/**")
+          .disable()
+          .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
+          .exceptionHandling()
+          .authenticationEntryPoint(problemSupport)
+          .accessDeniedHandler(problemSupport)
+          .and()
+          .headers()
+          .contentSecurityPolicy(jHipsterProperties.getSecurity().getContentSecurityPolicy())
+          .and()
+          .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+          .and()
+          .permissionsPolicy().policy("camera=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), sync-xhr=()")
+          .and()
+          .frameOptions().sameOrigin()
+          .and()
+          .sessionManagement()
+          .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+          .and()
+          .authorizeRequests()
+          .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+          .antMatchers("/app/**/*.{js,html}").permitAll()
+          .antMatchers("/i18n/**").permitAll()
+          .antMatchers("/content/**").permitAll()
+          .antMatchers("/swagger-ui/**").permitAll()
+          .antMatchers("/test/**").permitAll()
+          .antMatchers("/h2-console/**").permitAll()
+          .antMatchers("/api/authenticate").permitAll()
+          .antMatchers("/api/register").permitAll()
+          .antMatchers("/api/activate").permitAll()
+          .antMatchers("/api/account/reset-password/init").permitAll()
+          .antMatchers("/api/account/reset-password/finish").permitAll()
+          .antMatchers("/api/admin/**").hasAuthority(AuthoritiesConstants.ADMIN)
+          .antMatchers("/api/**").authenticated()
+          .antMatchers("/management/health").permitAll()
+          .antMatchers("/management/health/**").permitAll()
+          .antMatchers("/management/info").permitAll()
+          .antMatchers("/management/prometheus").permitAll()
+          .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
+          .and()
+          .httpBasic()
+          .and()
+          .apply(securityConfigurerAdapter());
         return http.build();
         // @formatter:on
     }

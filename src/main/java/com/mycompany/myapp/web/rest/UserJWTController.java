@@ -1,18 +1,22 @@
 package com.mycompany.myapp.web.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myapp.security.CustomAuthenticationToken;
+import com.mycompany.myapp.security.SecurityUtils;
+import com.mycompany.myapp.security.jwt.CustomTokenProvider;
 import com.mycompany.myapp.security.jwt.JWTFilter;
 import com.mycompany.myapp.security.jwt.TokenProvider;
 import com.mycompany.myapp.web.rest.vm.LoginVM;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import javax.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +28,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class UserJWTController {
 
-    private final TokenProvider tokenProvider;
+    private final CustomTokenProvider tokenProvider;
 
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final AuthenticationManager authenticationManager;
 
-    public UserJWTController(TokenProvider tokenProvider, AuthenticationManagerBuilder authenticationManagerBuilder) {
+    public UserJWTController(CustomTokenProvider tokenProvider, AuthenticationManager authenticationManager) {
         this.tokenProvider = tokenProvider;
-        this.authenticationManagerBuilder = authenticationManagerBuilder;
+        this.authenticationManager = authenticationManager;
     }
 
     @PostMapping("/authenticate")
@@ -39,7 +43,7 @@ public class UserJWTController {
         @RequestHeader(value = "Source", required = false) String someSource
     ) {
         UsernamePasswordAuthenticationToken authenticationToken;
-        if (someSource.equals("some source")) {
+        if (someSource != null && someSource.equals("some source")) {
             Map<String, String> details = new HashMap<>();
             details.put("someSource", someSource);
             authenticationToken = new CustomAuthenticationToken(loginVM.getUsername(), loginVM.getPassword(), details);
@@ -47,7 +51,7 @@ public class UserJWTController {
             authenticationToken = new UsernamePasswordAuthenticationToken(loginVM.getUsername(), loginVM.getPassword());
         }
 
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        Authentication authentication = authenticationManager.authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.createToken(authentication, loginVM.isRememberMe());
         HttpHeaders httpHeaders = new HttpHeaders();

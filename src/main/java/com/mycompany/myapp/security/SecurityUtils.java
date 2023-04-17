@@ -1,6 +1,7 @@
 package com.mycompany.myapp.security;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.springframework.security.core.Authentication;
@@ -96,5 +97,13 @@ public final class SecurityUtils {
 
     private static Stream<String> getAuthorities(Authentication authentication) {
         return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority);
+    }
+
+    public static Optional<Map<String, String>> getDetailsAsMap() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        return Optional
+            .ofNullable(securityContext.getAuthentication())
+            .filter(authentication -> authentication.getDetails() instanceof Map)
+            .map(authentication -> (Map<String, String>) authentication.getDetails());
     }
 }
